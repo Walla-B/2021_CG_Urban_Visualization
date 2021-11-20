@@ -78,7 +78,6 @@ public class GameManager : MonoBehaviour
         PlanetManager.Instance.GetPlanet_GameObjectWithName("samplePlanet1").GetComponent<MeshRenderer>().material.color = Color.red;
 
         */
-
     }
 
     // Handle Project Logics
