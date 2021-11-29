@@ -7,7 +7,7 @@ public class PlanetManager : Singleton<PlanetManager>
     private Dictionary<string, Planet> planetMap = new Dictionary<string, Planet>();
     private Dictionary<string, GameObject> planet_GameObjectMap = new Dictionary<string, GameObject>();
 
-    private GameObject parentObj_Planets;
+    public GameObject parentObj_Planets;
 
     void Awake() {
         parentObj_Planets = new GameObject();
@@ -34,10 +34,15 @@ public class PlanetManager : Singleton<PlanetManager>
         throw new System.ArgumentException("Cannot find Planet with Name",planetName);
     }
 
+    public int GetPlanetsNumber(){
+        return planetMap.Count;
+    }
+
     public void InstantiateAllPlanets() {
         foreach (Planet planet in planetMap.Values) {
             Visualize.InstantiatePlanet(planet,parentObj_Planets.transform);
         }
+        parentObj_Planets.transform.Rotate(0f,0f,16f);
     }
 
     public void AddPlanet_GameObjectToMap(GameObject instance) {

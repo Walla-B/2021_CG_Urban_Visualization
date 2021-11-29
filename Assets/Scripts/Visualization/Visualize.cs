@@ -31,7 +31,7 @@ public class Visualize : MonoBehaviour
         instantiatedBalloon.name = balloon.BalloonName;
         BalloonManager.Instance.AddBalloon_GameObjectInMap(instantiatedBalloon);
 
-        Debug.Log("Instantiated Balloon : " + balloon.BalloonName);
+        //Debug.Log("Instantiated Balloon : " + balloon.BalloonName);
 
     }
 }

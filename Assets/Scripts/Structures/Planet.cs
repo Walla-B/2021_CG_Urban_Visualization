@@ -16,4 +16,9 @@ public class Planet
     public List<Balloon> Balloons {get;}
     public GameObject PlanetMesh {get;}
 
+
+    public void SetPlanetMetaData(string[] _dataString) {
+        this.DataString = _dataString;
+    }
+    public string[] DataString {get; set;}
 }

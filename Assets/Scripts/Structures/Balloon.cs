@@ -21,12 +21,4 @@ public class Balloon
     public GameObject BalloonMesh {get;} 
     public Color BalloonColor {get;}
 
-
-    // Optional data
-
-    public void SetBalloonData(List<string> _dataString) {
-        this.DataString = _dataString;
-    }
-    public List<string> DataString {get; set;}
-
 }

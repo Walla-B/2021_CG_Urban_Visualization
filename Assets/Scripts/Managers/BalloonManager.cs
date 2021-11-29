@@ -10,7 +10,7 @@ public class BalloonManager : Singleton<BalloonManager>
     public Balloon CreateBalloon(Vector3 balloonPosition, float sizeOffset, bool isBeforeCovid, GameObject balloonMesh, Color balloonColor) {
         string name = "balloon" + balloonMap.Count.ToString();
         Balloon balloon = new Balloon(name,balloonPosition,sizeOffset,isBeforeCovid,balloonMesh,balloonColor);
-        Debug.Log("Created Balloon with name : " + name);
+        //Debug.Log("Created Balloon with name : " + name);
         return balloon;
     }
 
