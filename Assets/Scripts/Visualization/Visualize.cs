@@ -9,7 +9,7 @@ public class Visualize : MonoBehaviour
 
         GameObject instantiatedPlanet = Instantiate(planet.PlanetMesh,parent.position + planet.PlanetPosition, Quaternion.identity, parent);
 
-        Debug.Log("Instantiated Planet : " + planet.PlanetName);
+        //Debug.Log("Instantiated Planet : " + planet.PlanetName);
         instantiatedPlanet.name = planet.PlanetName;
         PlanetManager.Instance.AddPlanet_GameObjectToMap(instantiatedPlanet);
 
@@ -23,7 +23,7 @@ public class Visualize : MonoBehaviour
         GameObject instantiatedBalloon = Instantiate(balloon.BalloonMesh, parent.position + balloon.BalloonPosition, Quaternion.identity, parent);
 
         //set balloon color with balloon.BalloonColor 
-        instantiatedBalloon.GetComponent<MeshRenderer>().material.color = balloon.BalloonColor;
+        instantiatedBalloon.GetComponent<MeshRenderer>().material = ColorManager.Instance.GetMaterial(balloon.ColorIdx);
 
         //set balloon scale with balloon.SizeOffset
         instantiatedBalloon.GetComponent<Transform>().localScale = Vector3.one * balloon.SizeOffset;
@@ -34,4 +34,17 @@ public class Visualize : MonoBehaviour
         //Debug.Log("Instantiated Balloon : " + balloon.BalloonName);
 
     }
+    public static void DisableChildMesh(GameObject obj) {
+        foreach (Renderer renderer in obj.GetComponentsInChildren<Renderer>()) {
+            renderer.enabled = false;
+        }
+    
+    }
+    public static void EnableChildMesh(GameObject obj) {
+        foreach (Renderer renderer in obj.GetComponentsInChildren<Renderer>()) {
+            renderer.enabled = true;
+        }
+    
+    }
+
 }

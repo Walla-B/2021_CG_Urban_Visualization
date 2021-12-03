@@ -10,15 +10,20 @@ public class GameManager : MonoBehaviour
         BalloonManager.Instance.enabled = true;
         InputManager.Instance.enabled = true;
         CameraManager.Instance.enabled = true;
+        ColorManager.Instance.enabled = true;
     }
 
     // Initialize data
     void Start() {
+        ColorManager.Instance.Init();
+
         InitializeData.InitializePlanetData();
 
         
         // Instantiate all planets
         PlanetManager.Instance.InstantiateAllPlanets();
+
+        PlanetManager.Instance.InstantiateAllPlanets_AfterCovid();
 
         // Access Instantiated Planets / Balloons
         //PlanetManager.Instance.GetPlanet_GameObjectWithName("samplePlanet1").GetComponent<MeshRenderer>().material.color = Color.red;
@@ -33,6 +38,7 @@ public class GameManager : MonoBehaviour
     }
     public static State currentState = State.OverView;
     public static void ChangeGameState() {
+        Debug.Log("Changed Gamestate");
         switch (currentState) {
             case State.OverView:
                 GameManager.overView.alpha = 1.0f;

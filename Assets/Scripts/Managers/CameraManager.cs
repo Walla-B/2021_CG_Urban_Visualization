@@ -23,17 +23,14 @@ public class CameraManager : Singleton<CameraManager>
         //Transform movingObj = mainCamera.transform;
         //Vector3 targetPos = TefaultPosititon;
         //movingObj.position = Vector3.Lerp(movingObj.position, targetPos, 2 * Time.deltaTime);
-        if (Input.GetKeyDown("w")) {
-            CameraToZoomPosition();
-        }
-        if (Input.GetKeyDown("s")) {
-            CameraToDefaultPosition();
-        }
         if (Input.GetMouseButton(0) && GameManager.currentState == GameManager.State.ZoomIn) {
             //GameObject plnt = PlanetManager.Instance.GetPlanet_GameObjectWithName(GetCurrentPlanetName());
             //Debug.Log("Got GameObject" + plnt.name);
             //Debug.Log("Mouse1 down");
             PlanetManager.Instance.GetPlanet_GameObjectWithName(GetCurrentPlanetName()).transform.Rotate(new Vector3(Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"),0f) * 300 *  Time.deltaTime);
+        }
+        else if (GameManager.currentState == GameManager.State.ZoomIn) {
+            PlanetManager.Instance.GetPlanet_GameObjectWithName(GetCurrentPlanetName()).transform.Rotate(new Vector3(0f,0.2f,0f),Space.World);
         }
     }
 
@@ -47,6 +44,7 @@ public class CameraManager : Singleton<CameraManager>
     }
     public void CameraToDefaultPosition(){
         if (!corutineRunning) {
+            InputManager.Instance.ShowBeforeCoronaMesh();
             StartCoroutine(ChangePos(mainCamera.transform, defaultPosition, 1.6f));
 
             GameManager.currentState = GameManager.State.OverView;
@@ -69,7 +67,7 @@ public class CameraManager : Singleton<CameraManager>
         while (elapsedtime < movetime) {
             movingObj.position = Vector3.Lerp(movingObj.position, finalpos, 5 * Time.deltaTime);
             elapsedtime += Time.deltaTime;
-            Debug.Log("Time eplapsed" + elapsedtime);
+            //Debug.Log("Time eplapsed" + elapsedtime);
             yield return null;
         }
         movingObj.position = finalpos;

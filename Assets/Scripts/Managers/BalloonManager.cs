@@ -7,9 +7,9 @@ public class BalloonManager : Singleton<BalloonManager>
     private Dictionary<string, Balloon> balloonMap = new Dictionary<string, Balloon>();
     private Dictionary<string, GameObject> balloon_GameObjectMap = new Dictionary<string, GameObject>();
 
-    public Balloon CreateBalloon(Vector3 balloonPosition, float sizeOffset, bool isBeforeCovid, GameObject balloonMesh, Color balloonColor) {
+    public Balloon CreateBalloon(Vector3 balloonPosition, float sizeOffset, GameObject balloonMesh, int colorIdx, bool isBeforeCovid) {
         string name = "balloon" + balloonMap.Count.ToString();
-        Balloon balloon = new Balloon(name,balloonPosition,sizeOffset,isBeforeCovid,balloonMesh,balloonColor);
+        Balloon balloon = new Balloon(name,balloonPosition,sizeOffset,balloonMesh,colorIdx,isBeforeCovid);
         //Debug.Log("Created Balloon with name : " + name);
         return balloon;
     }

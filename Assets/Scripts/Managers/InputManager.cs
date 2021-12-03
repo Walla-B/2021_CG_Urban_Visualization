@@ -6,11 +6,11 @@ using TMPro;
 
 public class InputManager : Singleton<InputManager>
 {
-    public Button buttonR, buttonL, buttonB;
+    public Button buttonR, buttonL, buttonB, buttonBeforeCorona, buttonAfterCorona;
     public CanvasGroup infoPanel;
     private TextMeshProUGUI planetName;
     private TextMeshProUGUI d01, d02, d03, d04, d05, d06, d07, d08, d09, d10;
-    private bool corutineRunning;
+    private bool corutineRunning, isAfterCorona = false;
     private Vector3 moveVector = new Vector3(0f,0f,0.1f);
     // Start is called before the first frame update
     void Start()
@@ -18,6 +18,9 @@ public class InputManager : Singleton<InputManager>
         buttonR = GameObject.Find("Button_ToRight").GetComponent<Button>(); 
         buttonL = GameObject.Find("Button_ToLeft").GetComponent<Button>();
         buttonB = GameObject.Find("Button_Back").GetComponent<Button>();
+        buttonBeforeCorona = GameObject.Find("Button_BeforeCorona").GetComponent<Button>();
+        buttonAfterCorona = GameObject.Find("Button_AfterCorona").GetComponent<Button>();
+
         infoPanel = GameObject.Find("Panel_InfoPanel").GetComponent<CanvasGroup>();
 
         planetName = GameObject.Find("Text_CurrentPlanetName").GetComponent<TextMeshProUGUI>();
@@ -36,6 +39,9 @@ public class InputManager : Singleton<InputManager>
         buttonR.onClick.AddListener(()=>InputManager.Instance.RotatePlanetsR());
         buttonL.onClick.AddListener(()=>InputManager.Instance.RotatePlanetsL());
         buttonB.onClick.AddListener(()=>CameraManager.Instance.CameraToDefaultPosition());
+
+        buttonAfterCorona.onClick.AddListener(()=>InputManager.Instance.ShowAfterCoronaMesh());
+        buttonBeforeCorona.onClick.AddListener(()=>InputManager.Instance.ShowBeforeCoronaMesh());
     }
 
     // Update is called once per frame
@@ -47,6 +53,7 @@ public class InputManager : Singleton<InputManager>
         if (Input.GetMouseButtonDown(0) && GameManager.currentState == GameManager.State.OverView) {
             CameraManager.Instance.CameraToZoomPosition();
         }
+
         if (Input.mouseScrollDelta.y != 0 && GameManager.currentState == GameManager.State.OverView) {
             if (Input.mouseScrollDelta.y > 0) {
                 if (!corutineRunning) {
@@ -67,9 +74,11 @@ public class InputManager : Singleton<InputManager>
                 CameraManager.Instance.mainCamera.transform.position -= moveVector;
             }
         }
+
     }
 
     public void RotatePlanetsR() {
+        Debug.Log("Button pressed");
         if (!corutineRunning) {
             StartCoroutine(RotateObject(PlanetManager.Instance.parentObj_Planets, 0.6f, 360.0f/PlanetManager.Instance.GetPlanetsNumber()));
         }
@@ -95,7 +104,38 @@ public class InputManager : Singleton<InputManager>
         d09.text = textlist[8];
         d10.text = textlist[9];
     }
+    
+    public void ShowAfterCoronaMesh() {
+        if (isAfterCorona == false) {
+            isAfterCorona = true;
+            string currentPlanetName = CameraManager.Instance.GetCurrentPlanetName();
+            GameObject currentPlanetObject = PlanetManager.Instance.GetPlanet_GameObjectWithName(currentPlanetName);
+            GameObject nextPlanetObject = PlanetManager.Instance.GetPlanet_GameObjectWithName(currentPlanetName + "AfterCovid");
+            Visualize.DisableChildMesh(currentPlanetObject);
+            Visualize.EnableChildMesh(nextPlanetObject);
+            currentPlanetObject.GetComponent<SphereCollider>().enabled = false;
+            nextPlanetObject.GetComponent<SphereCollider>().enabled = true;
+        }
+    }
+
+    public void ShowBeforeCoronaMesh() {
+        if (isAfterCorona == true) {
+            isAfterCorona = false;
+            string currentPlanetName = CameraManager.Instance.GetCurrentPlanetName();
+            GameObject currentPlanetObject = PlanetManager.Instance.GetPlanet_GameObjectWithName(currentPlanetName);
+            GameObject nextPlanetObject = PlanetManager.Instance.GetPlanet_GameObjectWithName(currentPlanetName.TrimEnd("AfterCovid".ToCharArray()));
+            Visualize.DisableChildMesh(currentPlanetObject);
+            Visualize.EnableChildMesh(nextPlanetObject);
+            currentPlanetObject.GetComponent<SphereCollider>().enabled = false;
+            nextPlanetObject.GetComponent<SphereCollider>().enabled = true;
+        }
+    }
+
     private IEnumerator RotateObject(GameObject movingObj, float movetime, float angle) {
+
+        if (isAfterCorona == true) {
+            ShowBeforeCoronaMesh();
+        }
         float elapsedtime = 0f;
         var rotate_from = movingObj.transform.rotation;
         var rotate_to = movingObj.transform.rotation * Quaternion.Euler(0f,angle,0f);
@@ -105,7 +145,7 @@ public class InputManager : Singleton<InputManager>
             float lerpamount = elapsedtime / movetime;
             movingObj.transform.rotation = Quaternion.Slerp(rotate_from, rotate_to, lerpamount);
             elapsedtime += Time.deltaTime;
-            Debug.Log("Time eplapsed" + elapsedtime);
+            //Debug.Log("Time eplapsed" + elapsedtime);
             yield return null;
         }
         movingObj.transform.rotation = rotate_to;
@@ -119,4 +159,5 @@ public class InputManager : Singleton<InputManager>
             CameraManager.Instance.CameraToZoomPosition();
         }
     }
+
 }

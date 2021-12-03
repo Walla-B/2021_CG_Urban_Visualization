@@ -20,6 +20,7 @@ public class InitializeData
         for ( int planetNo = 0; planetNo < data_names.Count; planetNo++) {
             // Make new List<Balloon> for Planet
             List<Balloon> temp_balloonlist = new List<Balloon>();
+            List<Balloon> temp_balloonlist_AfterCovid = new List<Balloon>();
 
             // Load Planet's Mesh from Prefab with data_name
             GameObject temp_planetMesh = Resources.Load("Prefabs/Planet_" + data_names[planetNo]) as GameObject;
@@ -36,7 +37,7 @@ public class InitializeData
             float z = Mathf.Cos(angle) * radius;
 
             Vector3 temp_planetPosition = new Vector3(x,0f,z);
-            Debug.Log(temp_planetPosition);
+            //Debug.Log(temp_planetPosition);
             
             // open csv file with data_names[i] and attach it to Stringreader
             TextAsset sourcefile = Resources.Load<TextAsset>(data_names[planetNo]);
@@ -44,6 +45,9 @@ public class InitializeData
             
             string line;
             bool endOfFile = false;
+
+            line = sr.ReadLine(); // Pass Header row
+
             // then, use stringreader to read each line
             while (!endOfFile) {
                 // Read line by line
@@ -54,32 +58,109 @@ public class InitializeData
                     break;
                 }
 
-                Balloon temp_balloon = InitializeBalloonData(line, temp_balloonMesh);
-                temp_balloonlist.Add(temp_balloon);
+                Balloon temp_balloon = InitializeBalloonData(line, temp_balloonMesh, data_names[planetNo]);
+                
+                // if balloon is before covid
+                if (temp_balloon.IsBeforeCovid == true) {
+                    temp_balloonlist.Add(temp_balloon);
+                }
+                // if balloon is after covid
+                else {
+                    temp_balloonlist_AfterCovid.Add(temp_balloon);
+                }
             }
 
             // Create planet
-            Planet temp_planet = PlanetManager.Instance.CreatePlanet( data_names[planetNo], temp_planetPosition, temp_planetMesh, temp_balloonlist );
+            Planet temp_planet = PlanetManager.Instance.CreatePlanet( data_names[planetNo], temp_planetPosition, temp_planetMesh, temp_balloonlist);
             temp_planet.SetPlanetMetaData(metadata[planetNo].Split(','));
             PlanetManager.Instance.AddPlanetToMap(temp_planet);
+
+            Planet temp_planet_AfterCovid = PlanetManager.Instance.CreatePlanet( data_names[planetNo] + "AfterCovid", temp_planetPosition, temp_planetMesh, temp_balloonlist_AfterCovid);
+            //Debug.Log(temp_planet_AfterCovid.PlanetName);
+            PlanetManager.Instance.AddPlanet_AfterCovidToMap(temp_planet_AfterCovid);
         }
     }
 
-    private static Balloon InitializeBalloonData(string line, GameObject balloonMesh) {
+    private static Balloon InitializeBalloonData(string line, GameObject balloonMesh, string planetName) {
         // split line with ','
         string[] data_array = line.Split(',');
 
-        // with data_array[n], calculate arguments needed for CreateBalloon().
-        /*
-        temp_balloonPosition = ...
-        temp_sizeOffset = ...
-        temp_isBeforeCovid = ...
-        temp_balloonColor = new Color(r,g,b);
-        
-        Balloon temp_balloon = BalloonManager.Instance.CreateBalloon( ... , balloonMesh , ... );
-        BalloonManager.Instance.AddBalloonToMap(temp_balloon);
-        */
-        Balloon temp_balloon = BalloonManager.Instance.CreateBalloon(new Vector3(0f,0f,0f), 1.0f, true, balloonMesh, Color.red);
+        float BalloonSize = 0.5f * 0.003f;
+        float BalloonJitter = 4f;
+
+        bool isBeforeCovid = true;
+
+        float latitude = 0.0f;
+        float longitude = 0.0f;
+        float diameter = 0.0f;
+        float radius = 0.0f;
+        int color_idx = 0;
+
+        switch (planetName) {
+            case "일별 교통량":  // data structure : [(일자), (요일), (지점번호), (해당 지점 평균 통행량), (합계), (0시), (1시), ... (23시), (0시평균) ,(1시평균), ...(23시 평균)]
+                string date = data_array[0];
+                float day = (date[6] - '0') * 10 + (date[7] - '0');
+                string location = data_array[2];
+                float average_traffic = float.Parse(data_array[3]);
+
+                int traffic_total = 0;
+                float max_traffic_rate = 0;
+                float min_traffic_rate = 0;
+                int busiest_hour = 0;
+
+                for (int i = 5; i < 29; i++)
+                {
+                    int traffic_value = int.Parse(data_array[i]);
+                    float traffic_average = float.Parse(data_array[i + 24]);
+                    traffic_total += traffic_value;
+
+                    float increase_rate = (traffic_value - traffic_average) / traffic_average;
+
+                    if (increase_rate > max_traffic_rate)
+                    {
+                        max_traffic_rate = increase_rate;
+                        busiest_hour = i - 5;
+                    }
+                    if (increase_rate < min_traffic_rate)
+                    {
+                        min_traffic_rate = increase_rate;
+                    }
+
+                }
+
+                float traffic_rate = (float)((traffic_total - average_traffic)) / average_traffic;
+
+                isBeforeCovid = int.Parse(date) < 20200000;
+
+                float maxAbs_traffic_rate = Mathf.Abs(max_traffic_rate) > Mathf.Abs(min_traffic_rate) ? max_traffic_rate : min_traffic_rate;
+                radius = Mathf.Pow(BalloonJitter,  maxAbs_traffic_rate) * BalloonSize;
+
+                longitude = 360 * (float)day / 31 + Random.Range(0f, 12f);
+                //float latitude = 180 * (float)busiest_hour / 24 + Random.Range(0f, 7.5f);
+                latitude = maxAbs_traffic_rate * 90 ;
+                //float diameter = PlanetSize * ((location[0] - 'A') / 6 + 1);
+                diameter = Mathf.Pow(4f, traffic_rate) * 100f;
+                color_idx = busiest_hour;
+
+
+                break;
+            case "일별 대중교통 이용량":
+                break;
+            case "따릉이 이용현황":
+                break;
+            case "대기오염도":
+                break;
+            case "일별 카드 결제건수":
+                break;
+        }
+
+        float x = diameter * Mathf.Sin(latitude) * Mathf.Cos(longitude);
+        float y = diameter * Mathf.Cos(latitude);
+        float z = diameter * Mathf.Sin(latitude) * Mathf.Sin(longitude);        
+
+        Vector3 temp_balloonPosition = new Vector3(x,y,z) * 0.0045f;
+        float temp_sizeOffset = radius;
+        Balloon temp_balloon = BalloonManager.Instance.CreateBalloon(temp_balloonPosition,temp_sizeOffset,balloonMesh, color_idx, isBeforeCovid);
         BalloonManager.Instance.AddBalloonToMap(temp_balloon);
 
         return temp_balloon;
